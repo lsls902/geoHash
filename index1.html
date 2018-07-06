@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=11d5a9541daea6113de6f87209d02f16"></script>
+	<!--加载鼠标绘制工具-->
+             <script type="text/javascript" src="/team/style/jquery.1.11.1.min.js"></script>
+	<script type="text/javascript" src="/team/style/DrawingManager_min.js"></script>
+       
+	<link rel="stylesheet" href="/team/style/DrawingManager_min.css" />
+	<!--加载检索信息窗口-->
+        <style>
+        body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";padding:0;}
+        .mousedown{display:none;width:20px;height:20px;position: fixed;left:0;top:0;border-radius: 50%;z-index:999;background:#00ffff;box-shadow: 0px 0px 12px #029BAB;border: 3px solid #029BAB;
+        }
+        #map{z-index: -1}
+        .wrap { width: 439px; height: 439px; position: fixed;z-index:998;right:-249px;top:-249px; display: none}
+        .wrap_s { position: absolute; width: 100%; height: 100%; background: url(style/b.png) no-repeat; animation: spin_s 49100ms infinite linear; }
+        .outer { position: absolute; width: 100%; height: 100%; background: url(style/s.png) no-repeat; animation: spin 9100ms infinite linear; }
+
+
+        @keyframes spin {
+          0%   { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
+        }
+         @keyframes spin_s {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        </style>
+        
+        
+	<title>圈出统计</title>
+</head>
+<body>
+<div class="wrap">
+    <div class='wrap_s'>
+    <div class="outer"></div>
+    </div>
+</div>
+    <div class="mousedown"></div>
+	
+	<div id="map" style="height:100%;-webkit-transition: all 0.5s ease-in-out;transition: all 0.5s ease-in-out;"></div>
+
+	<script type="text/javascript">
+
+
+
+        function fa()
+        {
+            $(".mousedown").fadeOut(1100);setTimeout("fa()",100);
+        }
+        fa();
+
+        function ft(i) 
+        {
+            if(i>6){ $(".wrap").hide(500);drawingManager.open();} else{ i++;setTimeout("ft("+i+")",1000);}
+        }
+
+
+    // 百度地图API功能
+
+    var wsmap = {
+        map: null,
+        XY: null,
+
+        
+        drawingManager: function(){
+            
+                var styleOptions = {
+                   strokeColor:"#029BAB",    
+                   fillColor:"#00ffff",      
+                   strokeWeight: 3,      
+                   strokeOpacity: 0.3,	   
+                   fillOpacity: 0.5,      
+                   strokeStyle: 'solid',
+                   boxShadow: "0px 0px 12px #029BAB"
+               };
+            
+                return new BMapLib.DrawingManager(this.map, {isOpen: true, enableDrawingTool: true,
+                drawingToolOptions: { anchor: BMAP_ANCHOR_TOP_LEFT,offset: new BMap.Size(5, 5), drawingModes:[BMAP_DRAWING_RECTANGLE, BMAP_DRAWING_CIRCLE]  },
+                circleOptions: styleOptions,rectangleOptions: styleOptions 
+            });
+        },
+        mapLoad: function () {
+            this.map = new BMap.Map("map");
+            this.map.centerAndZoom(new BMap.Point(110.51371,19.912124), 15);
+            this.map.setMapStyle({style:"light"});
+            var bottom_right_navigation = new BMap.NavigationControl({ anchor: BMAP_ANCHOR_BOTTOM_RIGHT, type: BMAP_NAVIGATION_CONTROL_ZOOM }); //缩放按钮
+            var bottom_left_control = new BMap.ScaleControl({ anchor: BMAP_ANCHOR_BOTTOM_LEFT, offset: new BMap.Size(0, 30) }); //比例尺
+            this.map.addControl(bottom_left_control);
+            this.map.addControl(bottom_right_navigation);    //添加地图类型控件
+
+            this.map.enableScrollWheelZoom();
+            this.showPolyline();
+            this.map.addEventListener("dragend", function () { wsmap.showPolyline(); });
+            this.map.addEventListener("zoomend", function () { wsmap.showPolyline(); });
+            
+               
+            //实例化鼠标绘制工具
+     
+            wsmap.drawingManager().addEventListener('overlaycomplete', function(e){
+
+              var overlays = [];
+                var pos;
+                var pos_s="";
+            wsmap.drawingManager().close();
+           
+           //  for(var i = 0; i < overlays.length; i++){wsmap.map.removeOverlay(overlays[i]);}
+           
+            overlays.push(e.overlay);
+            $(".wrap").show(1000);
+            ft(0);
+          pos=(overlays[0].getPath());
+
+          for(var m=0;m<4;m++)
+          {
+          pos_s+="["+pos[m].lat +","+pos[m].lng+"]";
+          }
+
+           alert(pos_s);
+        });
+
+        },
+
+        bs: function () {
+            var bs = this.map.getBounds();
+            var bssw = bs.getSouthWest();
+            var bsne = bs.getNorthEast();
+            return { 'x1': bssw.lng, 'y1': bssw.lat, 'x2': bsne.lng, 'y2': bsne.lat };
+        },
+        
+    
+        showPolyline: function () {
+            var zoome = this.map.getZoom();
+
+            this.map.clearOverlays();
+            if (zoome > 1) {
+                this.XY = this.bs();
+
+                for (var i = this.XY.x1; i < this.XY.x2; i = i + 0.0063) {
+                    var polyline = new BMap.Polyline([
+                        new BMap.Point(i, this.XY.y1),
+                        new BMap.Point(i, this.XY.y2)
+                    ], { strokeColor: "black", strokeWeight: 1, strokeOpacity: 0.5,strokeStyle: 'dashed' });
+                    this.map.addOverlay(polyline);
+                }
+
+                for (var i = this.XY.y1; i < this.XY.y2; i = i + 0.0048) {
+                    var polyline = new BMap.Polyline([
+                        new BMap.Point(this.XY.x1, i),
+                        new BMap.Point(this.XY.x2, i)
+                     ], { strokeColor: "black", strokeWeight: 1, strokeOpacity: 0.5,strokeStyle: 'dashed'  });
+                    this.map.addOverlay(polyline);
+                }
+            }
+
+        }
+ 
+
+    };
+    wsmap.mapLoad();
+    
+    //----------------------
+   
+
+      
+
+
+    
+    
+    
+</script>
+
+</body>
+</html>

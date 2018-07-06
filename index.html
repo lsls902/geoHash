@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=11d5a9541daea6113de6f87209d02f16"></script>
+	<!--加载鼠标绘制工具-->
+        <script type="text/javascript" src="/team/style/jquery.1.11.1.min.js"></script>
+	<script type="text/javascript" src="/team/style/DrawingManager_min.js"></script>
+        <script type="text/javascript" src="/team/style/geohash.js"></script>
+	<link rel="stylesheet" href="/team/style/DrawingManager_min.css" />
+	<!--加载检索信息窗口-->
+        <style>
+        body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";padding:0;}
+        .mousedown{display:none;width:20px;height:20px;position: fixed;left:0;top:0;border-radius: 50%;z-index:999;background:#00ffff;box-shadow: 0px 0px 12px #029BAB;border: 3px solid #029BAB;
+        }
+        #map{z-index: -1}
+        .wrap { width: 439px; height: 439px; position: fixed;z-index:14;left:-229px;bottom:-229px;}
+        .wrap_s { position: absolute; width: 100%; height: 100%; background: url(style/b.png) no-repeat; animation: spin_s 49100ms infinite linear; }
+        .outer { position: absolute; width: 100%; height: 100%; background: url(style/s.png) no-repeat; animation: spin 9100ms infinite linear; }
+        @keyframes spin {
+          0%   { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
+        }
+         @keyframes spin_s {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .anchorBL{display:none;}
+        .leftboxBG{width:15%;height:860px;background:#000;opacity: 0.4;position: absolute;left:10px;top: 10%;z-index: 15;}
+        .leftbox{width:15%;height:auto;position: absolute;left:10px;top: 10%;z-index:16;font-size:22px;color:#7adeff}
+        .leftbox ul {margin-left:30px;padding:0}
+        .leftbox ul li{padding-left:90px;list-style: none;height:40px;margin-top:20px;line-height: 50px;cursor: pointer}
+        .check{background:url(style/check.png) no-repeat 0 -42px;}
+        .checked{background:url(style/check.png) no-repeat 0 0px;}
+        
+        .rightboxBG{width:18%;height:860px;background:#000;opacity: 0.4;position: fixed;right:10px;top: 10%;z-index: 98;}
+        .rightbox{width:18%;height:auto;position: fixed;right:10px;top: 10%;z-index: 99;font-size:22px;color:#fff}
+        .rightbox ul {margin:30px;padding:0}
+        .rightbox ul li{padding-left:0px;list-style: none;height:40px;margin-top:20px;line-height:40px;}
+        .rightbox ul li span{float:right;}
+        .linebox{font-size:0px;height:5px;background:#f9f9f9;border-radius: 95px}
+        .colorline{font-size:0px;height:5px;background:#f9f9f9;border-radius:95px;opacity: 18}
+        
+        .c0{width:60%;background:#f9f9f9}
+        .c1{width:60%;background:#FB280C}
+        .c2{width:30%;background:#FF7900}
+        .c3{width:30%;background:#FCB50D}
+        .c4{width:30%;background:#FFDE5B}
+        .c5{width:30%;background:#CAFB0B}
+        .c6{width:30%;background:#9DFF68}
+        .c7{width:30%;background:#87FFBF}
+        .c8{width:30%;background:#009900}
+        .c9{width:30%;background:#019DA9}
+        .c10{width:30%;background:#628EFF}
+        .c11{width:30%;background:#CD62FF}
+        .c12{width:30%;background:#FF2A67}
+        .title{background:url(style/title.png) no-repeat 50% 0;width:100%;height:42px;position: absolute;left:0;top:0;z-index: 8}
+        .rdbox{position: fixed;bottom:15px;left:45%;z-index: 15;}
+        .rdbox a{float:left;width:20px;height:20px;margin-right: 10px;border-radius: 15%}
+        
+        .bin{border:2px solid #ccc;}
+        </style>
+	<title>圈出统计</title>
+</head>
+<body>
+<div class="wrap">
+    <div class='wrap_s'>
+    <div class="outer"></div>
+    </div>
+</div>
+<div class="mousedown"></div>
+
+<div class="leftboxBG"></div>
+<div class="leftbox">
+    <ul>
+        <li class="checked">昨日总人数</li>
+        <li class="check">本省人数</li>
+        <li class="check">外省人数</li>
+        <li class="check">游客总数</li>
+        <li class="check">本身游客人数</li>
+        <li class="check">外省游客人数</li>
+        <li class="check">一日游人数</li>
+        <li class="check">过夜游人数</li>
+        <li class="check">候鸟有人数</li>
+        <li class="check">乡村游人数</li>
+        <li class="check">度假游人数</li>
+        <li class="check">观光游人数</li>
+    </ul>
+</div>	
+<div class="rightboxBG"></div>
+<div class="rightbox">
+    <ul>
+        <li>昨日总人数<span>1000</span></li> <div class="linebox"><div class="colorline c1"></div></div>
+        <li>本省人数<span>500</span></li> <div class="linebox"><div class="colorline c2"></div></div>
+        <li>外省人数<span>500</span></li> <div class="linebox"><div class="colorline c3"></div></div>
+        <li>游客总数<span>500</span></li> <div class="linebox"><div class="colorline c4"></div></div>
+        <li>本身游客人数<span>500</span></li> <div class="linebox"><div class="colorline c5"></div></div>
+        <li>外省游客人数<span>500</span></li> <div class="linebox"><div class="colorline c6"></div></div>
+        <li>一日游人数<span>500</span></li> <div class="linebox"><div class="colorline c7"></div></div>
+        <li>过夜游人数<span>500</span></li> <div class="linebox"><div class="colorline c8"></div></div>
+        <li>候鸟有人数<span>500</span></li> <div class="linebox"><div class="colorline c9"></div></div>
+        <li>乡村游人数<span>500</span></li> <div class="linebox"><div class="colorline c10"></div></div>
+        <li>度假游人数<span>500</span></li> <div class="linebox"><div class="colorline c11"></div></div>
+        <li>观光游人数<span>500</span></li> <div class="linebox"><div class="colorline c12"></div></div>
+    </ul>
+</div>	
+
+<div class="rdbox">
+    <a href="javascript:;" class="c0 bin" ></a> 
+    <a href="javascript:;" class="c1"></a> 
+    <a href="javascript:;" class="c2"></a> 
+    <a href="javascript:;" class="c10"></a> 
+    <a href="javascript:;" class="c4"></a> 
+    <a href="javascript:;" class="c8"></a>
+</div>
+
+<div class="title"></div>
+<div id="map" style="height:100%;-webkit-transition: all 0.5s ease-in-out;transition: all 0.5s ease-in-out;"></div>
+<script type="text/javascript">
+
+      $(".leftbox ul li").click(function(){
+            var nowClass=$(this).attr("class");
+            if(nowClass=='check'){
+                $(this).removeClass("check");$(this).addClass("checked");
+            }
+            else if(nowClass=='checked'){
+                $(this).removeClass("checked");$(this).addClass("check");
+            }
+        });
+        
+       $(".rdbox a").click(function(){
+            $(".rdbox a").each(function(){
+                $(this).removeClass("bin");
+            });
+
+           $(this).addClass("bin");
+           var color=$(this).css("background-color");
+           wsmap._color=color;
+           wsmap.showPolyline();
+        });
+ 
+ 
+</script>
+
+
+<script type="text/javascript">
+    //map style
+    var styleJson = [
+        {"featureType": "water","elementType": "all","stylers": {"color": "#14162b"}},
+        {"featureType": "land","elementType": "all","stylers": {"color": "#232b50"}},
+        {"featureType": "boundary","elementType": "geometry","stylers": {"color": "#064f85"}},
+        {"featureType": "railway", "elementType": "all","stylers": {"visibility": "off"}},
+        {"featureType": "highway","elementType": "geometry","stylers": {"color": "#004981"}},
+        {"featureType": "highway","elementType": "geometry.fill","stylers": {"color": "#005b96","lightness": 1}},
+        {"featureType": "highway", "elementType": "labels", "stylers": {"visibility": "on"}},
+        {"featureType": "arterial","elementType": "geometry","stylers": {"color": "#004981"}},
+        {"featureType": "arterial","elementType": "geometry.fill","stylers": {}},
+        {"featureType": "poi","elementType": "all", "stylers": {"visibility": "on"}},
+        {"featureType": "green","elementType": "all","stylers": {"color": "#056197","visibility": "off"}},
+        {"featureType": "subway","elementType": "all","stylers": {"visibility": "off"}},
+        {"featureType": "manmade","elementType": "all","stylers": {"visibility": "off"}},
+        {"featureType": "local","elementType": "all","stylers": {"visibility": "off"}},
+        {"featureType": "arterial","elementType": "labels","stylers": {"visibility": "off"}},
+        {"featureType": "boundary","elementType": "geometry.stroke","stylers": {"color": "#00ffff"}},
+        {"featureType": "building","elementType": "all","stylers": {"color": "#1a5787"}},
+        {"featureType": "label", "elementType": "all","stylers": {"visibility": "on"}}
+            ];
+        function mouseDownStart(){ $(".mousedown").fadeOut(1100);setTimeout("mouseDownStart()",100); }
+     //   function ft(i){ $(".wrap").show(1000); if(i>6){ $(".wrap").hide(500);} else{ i++;setTimeout("ft("+i+")",1000);}}
+
+    var wsmap = {
+        _color:"#fff",
+        map: null,
+        draw:null,//画
+        getUseHash:[],
+        box_lng:[],//画好后存4个lng
+        box_lat:[],//画好后存4个lat
+       _points:[],//最终的网格的4个坐标点[[obj],[obj],[obj],[obj]]
+        styleOptions:{strokeColor:"#D7BE06",fillColor:"#888888",strokeWeight: 1,strokeOpacity: 1, fillOpacity: 0.5,  strokeStyle: 'solid',boxShadow: "0px 0px 12px #029BAB"},
+       loadData:function(){
+           var str="";
+            $(".leftbox ul .checked").each(function(){
+                str+=$(this).html()+",";
+            })
+          //  alert("传给服务端接口的4个角的坐标点：\r"+wsmap._points[0].lng+","+wsmap._points[0].lat+"\r"+wsmap._points[1].lng+","+wsmap._points[1].lat+"\r"+wsmap._points[2].lng+","+wsmap._points[2].lat+"\r"+wsmap._points[3].lng+","+wsmap._points[3].lat+"\r\r客户端本地选取查看的数据类型\r"+str);
+       },
+       CallBackDrawOver:function(e){ //画好以后发生了什么
+            wsmap.box_lng=[];wsmap.box_lat=[];
+            var pos;
+            var overlays = [];
+            overlays.push(e.overlay);
+            pos=(overlays[0].getPath());
+            for(var m=0;m<pos.length;m++)
+            {
+            wsmap.box_lng.push([pos[m].lng]);
+            wsmap.box_lat.push([pos[m].lat]);
+            }
+         
+          
+          var hash1= encodeGeoHash(wsmap.box_lat[0],wsmap.box_lng[0]);
+          var hash2= encodeGeoHash(wsmap.box_lat[1],wsmap.box_lng[1]);
+          var hash3= encodeGeoHash(wsmap.box_lat[2],wsmap.box_lng[2]);
+          var hash4= encodeGeoHash(wsmap.box_lat[3],wsmap.box_lng[3]);
+
+          var d_hash1=decodeGeoHash(hash1);
+          var d_hash3=decodeGeoHash(hash3);
+
+        //拓展画
+
+         wsmap.showPolyline();
+         wsmap._points=[]; 
+         var point;
+
+         point = new BMap.Point(d_hash1.lng[0],d_hash1.lat[1]);//sn 1
+         wsmap._points.push(point);
+         point = new BMap.Point(d_hash3.lng[1],d_hash1.lat[1]);//en 2
+         wsmap._points.push(point);
+         point = new BMap.Point(d_hash3.lng[1],d_hash3.lat[0]);//se 3
+         wsmap._points.push(point);
+         point = new BMap.Point(d_hash1.lng[0],d_hash3.lat[0]);//sw 4
+         wsmap._points.push(point);
+         var oval = new BMap.Polygon(wsmap._points,wsmap.styleOptions);
+         wsmap.map.addOverlay(oval);
+         
+
+         var startHash1=encodeGeoHash(d_hash1.lat[1],d_hash1.lng[0]);
+         var startHash2=encodeGeoHash(d_hash1.lat[1],d_hash3.lng[1]);
+         var startHash3=encodeGeoHash(d_hash3.lat[0],d_hash3.lng[1]);
+         var startHash4=encodeGeoHash(d_hash3.lat[0],d_hash1.lng[0]);
+
+         
+         
+         //getUseHash.push([startHash1,startHash2,startHash3,startHash4]);
+         
+         //----first line----
+         wsmap.getUseHash.push(startHash1);
+         getUsePartRight(startHash1,startHash2);
+         
+         getUsePartBottom(startHash1,startHash2,startHash3,startHash4);
+
+
+         alert(wsmap.getUseHash);
+       
+         wsmap.draw.close();
+         wsmap.loadData();
+         wsmap.getUseHash=[];
+         
+        },
+        mapLoad: function () {
+            this.map = new BMap.Map("map");
+            this.map.centerAndZoom(new BMap.Point(110.51371,19.912124), 11);
+            this.map.setMapStyle({styleJson:styleJson});
+            var bottom_right_navigation = new BMap.NavigationControl({ anchor: BMAP_ANCHOR_BOTTOM_RIGHT, type: BMAP_NAVIGATION_CONTROL_ZOOM }); //缩放按钮
+            var bottom_left_control = new BMap.ScaleControl({ anchor: BMAP_ANCHOR_BOTTOM_LEFT, offset: new BMap.Size(0, 30) }); //比例尺
+            this.map.addControl(bottom_left_control);
+            this.map.addControl(bottom_right_navigation);    //添加地图类型控件
+            this.map.enableScrollWheelZoom();
+            this.showPolyline();
+            this.draw= new BMapLib.DrawingManager(this.map, {isOpen: false, enableDrawingTool: true,
+                drawingToolOptions: { anchor: BMAP_ANCHOR_TOP_LEFT,offset: new BMap.Size(10, 50), zindex:110,drawingModes:[BMAP_DRAWING_RECTANGLE]  },
+                circleOptions: this.styleOptions,rectangleOptions: this.styleOptions 
+            });
+            this.draw.addEventListener('overlaycomplete',this.CallBackDrawOver);
+            mouseDownStart();
+        },
+        showPolyline: function () {//画网格
+                var point;
+                this.map.clearOverlays();
+                var lineCount=geoHash.length;
+                for (var i =0 ; i < lineCount; i=i+2) {
+                    var mpoints=[];
+                    point = new BMap.Point(geoHash[i][1].value.e,geoHash[i][1].value.n);
+                    mpoints.push(point);
+                    point = new BMap.Point(geoHash[i][1].value.e,geoHash[i][1].value.s);
+                    mpoints.push(point);
+                    point = new BMap.Point(geoHash[i][1].value.w,geoHash[i][1].value.s);
+                    mpoints.push(point);
+                    point = new BMap.Point(geoHash[i][1].value.w,geoHash[i][1].value.n);
+                    mpoints.push(point);
+                    var oval = new BMap.Polygon(mpoints,{strokeColor:this._color,strokeWeight: 1,strokeOpacity:0.5, fillOpacity:0.00001,  strokeStyle: 'dashed'});
+                    this.map.addOverlay(oval);
+                }
+        }
+    };
+    wsmap.mapLoad();
+
+//-------------------------------
+
+    function getUsePartRight(hash,overHash)
+    {
+        if(hash==overHash)
+        {
+            wsmap.getUseHash.push(overHash);
+            return;
+        }
+            var m= calculateAdjacent(hash,"right");
+            if(m!=overHash){
+            wsmap.getUseHash.push(m);
+            getUsePartRight(m,overHash); 
+        }
+    };
+
+    function getUsePartBottom(startHash1,startHash2,startHash3,startHash4)
+    {
+
+        var bottomhash1  =  calculateAdjacent(startHash1,"bottom");
+        var bottomhash2 = calculateAdjacent(startHash2,"bottom");
+        if(bottomhash1!=startHash4){
+            wsmap.getUseHash.push(bottomhash1);
+            getUsePartRight(bottomhash1,bottomhash2);
+            getUsePartBottom(bottomhash1,bottomhash2,startHash3,startHash4);
+        }
+        else
+            return ;
+    }
+
+
+</script>
+
+</body>
+</html>
